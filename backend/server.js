@@ -1,39 +1,27 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
-const path = require('path');
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const connectDB = require("./config/db");
 
+const authRoutes = require("./routes/authRoutes");
+const analysisRoutes = require("./routes/analysisRoutes");
+
+dotenv.config();
 const app = express();
+
+app.use(cors());
 app.use(express.json());
 
-// CORS: allow your Render static site + local dev
-const allowed = [
-  process.env.FRONTEND_ORIGIN,       // set from Render to the static site URL
-  'http://localhost:3000',
-  'http://localhost:5173'
-].filter(Boolean);
-app.use(cors({ origin: allowed, credentials: true }));
+connectDB();
 
-// Health check for Render
-app.get('/healthz', (req, res) => res.send('ok'));
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api", analysisRoutes);
 
-// Example: forward analysis upload to ML API (adjust to your real routes)
-const ML_API_URL = process.env.ML_API_URL; // Render will inject this
-app.post('/api/analysis/upload', async (req, res) => {
-  try {
-    // If you currently use multer for file uploads, keep that as-is,
-    // then forward the file buffer/form-data to ML_API_URL.
-    // This is just a placeholder to show the pattern:
-    const resp = await axios.post(`${ML_API_URL}/analyze`, req.body);
-    res.json(resp.data);
-  } catch (e) {
-    console.error(e?.response?.data || e.message);
-    res.status(500).json({ error: 'ML analysis failed' });
-  }
-});
-
-// …your existing routes…
+// Root endpoint
+app.get("/", (req, res) => res.send("✅ NeuroAssess API running successfully!"));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend listening on ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+const analysisRoutes = require('./routes/analysis');
+app.use('/api', analysisRoutes);
